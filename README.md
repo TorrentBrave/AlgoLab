@@ -57,8 +57,11 @@ full_tensor = torch.full([3, 2], 10)
 ### 1.3 指定区间创建
 
 ```python
+arange_tensor  = torch.arange(start=1, end=5, step=1)
 
+# res: tensor([1, 2, 3, 4])
 ```
+
 
 <!-- $$
 \bm{w}^\top = \begin{bmatrix}

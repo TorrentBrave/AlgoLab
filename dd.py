@@ -1,13 +1,10 @@
 import torch
 
 def main():
-    zeros_tensor = torch.zeros([3, 2])
-    print(zeros_tensor)
-    
-    ones_tensor = torch.ones([3, 2])
-    print(ones_tensor)
+    arange_tensor  = torch.arange(start=1, end=5, step=1)
+    print(arange_tensor)
 
-    full_tensor = torch.full([3, 2], 10)
-    print(full_tensor)
+    # linspace_tensor = torch.linspace(start=1, end=5, step=5)
+    # print(linspace_tensor)
 if __name__ == "__main__":
     main()
