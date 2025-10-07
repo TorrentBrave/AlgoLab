@@ -1,18 +1,13 @@
 import torch
 
 def main():
-    ndim_1_tensor = torch.tensor([2.0, 3.0, 4.0])
-    print(ndim_1_tensor)
+    zeros_tensor = torch.zeros([3, 2])
+    print(zeros_tensor)
     
-    ndim_2_tensor = torch.tensor([[2.0, 3.0, 4.0],
-                                  [1.0, 6.0, 7.0]])
-    print(ndim_2_tensor)
+    ones_tensor = torch.ones([3, 2])
+    print(ones_tensor)
 
-    ndim_3_tensor = torch.tensor([[[2.0, 3.0, 4.0],
-                                   [1.0, 6.0, 7.0]],
-                                  [[2.0, 3.0, 4.0],
-                                   [1.0, 6.0, 7.0]]])
-    print(ndim_3_tensor)
-
+    full_tensor = torch.full([3, 2], 10)
+    print(full_tensor)
 if __name__ == "__main__":
     main()

@@ -48,9 +48,17 @@ ndim_3_tensor = torch.tensor([[[2.0, 3.0, 4.0],
 ### 1.2 指定形状创建
 
 ```python
-import torch
-```
+zeros_tensor = torch.zeros([3, 2])
 
+ones_tensor = torch.ones([3, 2])
+
+full_tensor = torch.full([3, 2], 10)
+```
+### 1.3 指定区间创建
+
+```python
+
+```
 
 <!-- $$
 \bm{w}^\top = \begin{bmatrix}
