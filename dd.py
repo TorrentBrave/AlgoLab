@@ -5,7 +5,8 @@ def main():
     print(ones_tensor.ndim)
     print(ones_tensor.shape)
     print(ones_tensor.shape[-1])
-    print(ones_tensor.size)
+    print(ones_tensor.size())
+    print(ones_tensor.numel())
     print(ones_tensor)
     
 if __name__ == "__main__":
