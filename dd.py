@@ -1,10 +1,12 @@
 import torch
 
 def main():
-    arange_tensor  = torch.arange(start=1, end=5, step=1)
-    print(arange_tensor)
-
-    # linspace_tensor = torch.linspace(start=1, end=5, step=5)
-    # print(linspace_tensor)
+    ones_tensor  = torch.ones([2, 3, 4, 5])
+    print(ones_tensor.ndim)
+    print(ones_tensor.shape)
+    print(ones_tensor.shape[-1])
+    print(ones_tensor.size)
+    print(ones_tensor)
+    
 if __name__ == "__main__":
     main()

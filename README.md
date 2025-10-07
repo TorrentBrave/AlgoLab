@@ -11,6 +11,15 @@ $\bm{x} = \begin{bmatrix}
 x_1x_2 \cdots x_N
 \end{bmatrix}^\top$
 
+<!-- $$
+\bm{w}^\top = \begin{bmatrix}
+w_1 \\
+w_2 \\
+\vdots \\
+w_N
+\end{bmatrix}
+$$ -->
+
 > 数据常用张量(Tensor)形式存储, 张量是矩阵的扩展与延伸, 认为是高阶的矩阵, 一阶张量是向量, 二阶张量是矩阵, 类似 Numpy 多维数组(ndarray), 可以具有任意多的维度
 
 ---
@@ -61,13 +70,19 @@ arange_tensor  = torch.arange(start=1, end=5, step=1)
 
 # res: tensor([1, 2, 3, 4])
 ```
+## 2 张量的属性
 
+### 2.1 张量的形状
 
-<!-- $$
-\bm{w}^\top = \begin{bmatrix}
-w_1 \\
-w_2 \\
-\vdots \\
-w_N
-\end{bmatrix}
-$$ -->
+> 张量具有如下形状属性
+
+| 方法 | 含义 |
+|:---|:---:|
+| ***Tensor.ndim*** | 张量的维度 |
+| ***Tensor.shape*** | 每个维度上元素的数量 |
+| ***Tensor.shape[n]*** | 张量第n维的大小,第n维也称为轴(axis) |
+| ***Tensor.size*** | 张量中全部元素的个数 |
+
+<div align="center">
+  <img src="https://camo.githubusercontent.com/35616717a23afffd5b23a2a2c7aba20430da47ade37b6b6de3ccd1b909e47642/68747470733a2f2f61692d73747564696f2d7374617469632d6f6e6c696e652e63646e2e626365626f732e636f6d2f64383436316566303939343534396139386331623235336632613331666536306564623762623230306239363462343361396332353831386632326133316336" alt="ndim/shape/axis/size四种属性间的区别" width="700">
+</div>
