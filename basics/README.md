@@ -286,5 +286,75 @@ cpu
 ## 3 张量与Numpy数组转换
 
 ```python
+import torch
+ndim2_Tensor = torch.ones([5, 10])
 
+print(ndim2_Tensor.dtype)
+print(ndim2_Tensor.device)
+
+print(ndim2_Tensor)
+
+ndim2_Numpy = ndim2_Tensor.numpy()
+
+print(ndim2_Numpy)
+print(ndim2_Numpy.dtype)
+# --------------------------------------------
+# Output
+# --------------------------------------------
+torch.float32
+cpu
+tensor([[1., 1., 1., 1., 1., 1., 1., 1., 1., 1.],
+        [1., 1., 1., 1., 1., 1., 1., 1., 1., 1.],
+        [1., 1., 1., 1., 1., 1., 1., 1., 1., 1.],
+        [1., 1., 1., 1., 1., 1., 1., 1., 1., 1.],
+        [1., 1., 1., 1., 1., 1., 1., 1., 1., 1.]])
+[[1. 1. 1. 1. 1. 1. 1. 1. 1. 1.]
+ [1. 1. 1. 1. 1. 1. 1. 1. 1. 1.]
+ [1. 1. 1. 1. 1. 1. 1. 1. 1. 1.]
+ [1. 1. 1. 1. 1. 1. 1. 1. 1. 1.]
+ [1. 1. 1. 1. 1. 1. 1. 1. 1. 1.]]
+float32
 ```
+
+## 4 张量的访问
+
+### 4.1 索引和切片
+
+> 可以通过索引或切片方便地访问或修改张量
+
+> 使用Python索引规则与Numpy索引规则, 具有以下特点
+
+- 基于 $0 - (n-1)$ 的下标进行索引, 如果下标为负数, 则从尾部开始计算
+- 通过冒号":"分隔切片参数start:end:step进行切片操作, 也就是访问start到end范围内的部分元素并生成一个新的序列. 其中start为切片的起始位置, end为切片的截止位置, step是切片的步长, 这三个参数均可缺省.
+
+### 4.2 访问单维张量
+
+> 针对一维张量, 对于单个轴进行索引和切片
+
+```python
+ndim_1_Tensor = torch.arange(start=1, end=10, step=1)
+
+print(ndim_1_Tensor)
+print(ndim_1_Tensor.dtype)
+
+print(ndim_1_Tensor[0])
+print(ndim_1_Tensor[1])
+print(ndim_1_Tensor[-1])
+print(ndim_1_Tensor[:3])
+print(ndim_1_Tensor[::3])
+
+# -------------------------------------------
+# Output
+# -------------------------------------------
+tensor([1, 2, 3, 4, 5, 6, 7, 8, 9])
+torch.int64
+tensor(1)
+tensor(2)
+tensor(9)
+tensor([1, 2, 3])
+tensor([1, 4, 7])
+```
+
+### 4.3 访问高维张量
+
+> 
