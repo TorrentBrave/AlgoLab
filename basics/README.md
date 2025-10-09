@@ -50,6 +50,12 @@ ndim_3_tensor = torch.tensor([[[2.0, 3.0, 4.0],
                                 [1.0, 6.0, 7.0]],
                                 [[2.0, 3.0, 4.0],
                                 [1.0, 6.0, 7.0]]])
+
+# ---------------------------------------------------
+# 在创建张量的同时也定义数据的类型
+# torch.ones([2, 3]) 默认的数据类型是 torch.float32
+# ---------------------------------------------------
+ndim2_Tensor = torch.ones([2, 3], dtype=torch.int64)
 ```
 
 > 需要注意的是,张量在任何一个维度上的元素数量必须相等.下面尝试定义一个在同一维度上元素数量不等的张量
@@ -398,4 +404,43 @@ tensor(1)
 
 ---
 
-### 4.4 
+```python
+nim2_Tensor = torch.ones([2, 3], dtype=torch.float32)
+
+print('Origin Tensor: ', nim2_Tensor)
+
+# 修改第 1维为0
+# 等价于 nim2_Tensor[0] = 0
+# 等价于 nim2_Tensor[0:1] = 0
+nim2_Tensor[0, :] = 0
+print('Change Tensor: ', nim2_Tensor)
+
+# 修改第 1维为2.1
+nim2_Tensor[0:1] = 2.1
+print('Change Tensor: ', nim2_Tensor)
+
+# 修改全部Tensor
+nim2_Tensor[...] = 3
+print('Change Tensor: ', nim2_Tensor)
+
+print(nim2_Tensor.dtype)
+
+# --------------------------------------------
+# Output
+# --------------------------------------------
+Origin Tensor:  tensor([[1., 1., 1.],
+        [1., 1., 1.]])
+Change Tensor:  tensor([[0., 0., 0.],
+        [1., 1., 1.]])
+Change Tensor:  tensor([[2.1000, 2.1000, 2.1000],
+        [1.0000, 1.0000, 1.0000]])
+Change Tensor:  tensor([[3., 3., 3.],
+        [3., 3., 3.]])
+torch.float32
+```
+
+### 4.5 张量的运算
+
+> 张量支持包含基础数学运算、 逻辑运算、 矩阵运算等100余种运算操作, 以加法为例, 有两种实现方式:
+
+1. 
