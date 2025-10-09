@@ -683,20 +683,20 @@ class Op(object):
     def __init__(self):
         pass
 
-    def __call__(self, inputs):
-        return self.forward(inputs)
+    def __call__(self, *inputs):
+        return self.forward(*inputs)
 
     # 前向函数
     # 输入：张量inputs
     # 输出：张量outputs
-    def forward(self, inputs):
+    def forward(self, *inputs):
         # return outputs
         raise NotImplementedError
 
     # 反向函数
     # 输入：最终输出对outputs的梯度outputs_grads
     # 输出：最终输出对inputs的梯度inputs_grads
-    def backward(self, outputs_grads):
+    def backward(self, *outputs_grads):
         # return inputs_grads
         raise NotImplementedError
 
@@ -738,7 +738,7 @@ class Op(object):
 - $\delta_y =  \delta_z \times 1$
 
 ```python
-class add(Op):
+class Add(Op):
     def __init__(self):
         super(add, self).__init__()
 
@@ -759,3 +759,57 @@ class add(Op):
 ```
 
 > 定义: $x=1$、$y=4$, 根据反向计算, 得到 $x$ 和 $y$ 的梯度
+
+---
+***笔记:***
+> *args：接收任意多个位置参数（非关键字参数），打包成一个 元组（tuple）
+
+```python
+# ------------------------------------------
+# 处理"多出来的"位置参数
+# ------------------------------------------
+def add(*args):
+    """
+    使用 *args（接受任意多个数字相加）
+    """
+    print("args =", args)      # args 是一个 tuple
+    return sum(args)
+
+print(add(1, 2))              # args = (1, 2) → 3
+print(add(1, 2, 3, 4, 5))     # args = (1, 2, 3, 4, 5) → 15
+print(add())                  # args = () → 0
+
+# -------------------------------------------
+
+def greet(name, *args):
+    """
+    也可以和其他参数混合使用(但 *args 必须在后面)
+    """
+    print(f"Hello {name}!")
+    print("Extras:", args)
+
+greet("Alice", "apple", "book", "cat")
+# 输出：
+# Hello Alice!
+# Extras: ('apple', 'book', 'cat')
+```
+> **kwargs：接收任意多个关键字参数，打包成一个 字典（dict）
+```python
+# --------------------------------------------
+# **kwargs: 处理"多出来的"关键字参数
+# --------------------------------------------
+def person(name, age, **kwargs):
+    """
+    使用 **kwargs 接收额外信息
+    """
+    print(f"{name} is {age} years old")
+    print("Other info:", kwargs)     # kwargs 是一个 dict
+
+person("Bob", 25, city="NYC", job="Engineer")
+# 输出：
+# Bob is 25 years old
+# Other info: {'city': 'NYC', 'job': 'Engineer'}
+```
+---
+
+### 1.2 乘法算子
