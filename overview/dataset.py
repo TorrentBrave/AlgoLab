@@ -18,6 +18,11 @@ def create_toy_data(func, interval, sample_num, noise = 0.0, add_outlier = False
     输出：
        - X: 特征数据 shape=[n_samples,1]
        - y: 标签数据 shape=[n_samples,1]
+
+    用均匀分布模拟数据 | 用高斯分布模拟噪声
+       - torch.rand 生成 均匀分布 的随机数,常用于 均匀采样输入数据（如 $x$），以确保覆盖整个输入区间,避免偏差。  
+       - torch.normal 生成 高斯（正态）分布 的随机数,常用于 模拟标签噪声,因为现实中的测量误差通常由多种微小因素叠加而成,近似服从高斯分布,且其数学性质优良(如与最小二乘损失对应)
+       ✅ 均匀采样输入 → 全面探索；高斯噪声标签 → 贴近现实、理论合理
     """
     # 均匀采样
     # 使用 torch.rand 在生成 sample_num个随机数
