@@ -1,6 +1,8 @@
 import torch
 from matplotlib import pyplot as plt
 
+torch.manual_seed(42)
+
 def linear_func(x, w=1.2, b=0.5):
     y = w*x + b
     return y
@@ -44,17 +46,14 @@ def create_toy_data(func, interval, sample_num, noise = 0.0, add_outlier = False
     return X, y
 
 
-func = linear_func
-interval = (-10, 10)
-train_num = 100
-test_num = 50
-noise = 2
-X_train, y_train = create_toy_data(func=func, interval=interval, sample_num=train_num, noise=noise, add_outlier=False)
-X_test, y_test = create_toy_data(func=func, interval=interval, sample_num=test_num, noise=noise, add_outlier=False)
-
-
 if __name__ == "__main__":
-
+    func = linear_func
+    interval = (-10, 10)
+    train_num = 100
+    test_num = 50
+    noise = 2
+    X_train, y_train = create_toy_data(func=func, interval=interval, sample_num=train_num, noise=noise, add_outlier=False)
+    X_test, y_test = create_toy_data(func=func, interval=interval, sample_num=test_num, noise=noise, add_outlier=False)
 
     # X_train_large, y_train_large = create_toy_data(func=func, interval=interval, sample_num=5000, noise=noise, add_outlier=False)
 
