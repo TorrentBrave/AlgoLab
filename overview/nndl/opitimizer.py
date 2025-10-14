@@ -17,7 +17,7 @@ def optimizer_lsm(model, X, y, reg_lambda=0):
     N, D = X.shape
 
     # 对输入特征数据所有特征向量求平均
-    x_bar_tran = torch.mean(X, axis=0).T
+    x_bar_tran = torch.mean(X, dim=0) # shape=(D,) 1D张量的转置是多余的, 和原来的一样
 
     # 求标签的均值, shape=[1]
     y_bar = torch.mean(y)
