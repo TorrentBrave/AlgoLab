@@ -812,6 +812,122 @@ person("Bob", 25, city="NYC", job="Engineer")
 ```
 ---
 
+***\_\_call\_\_的作用***：
+你提供的代码是一个**简化版的自动微分（autodiff）框架**，其中 `Op` 是所有操作（如加法、乘法等）的基类，而 `Add` 是一个具体的加法操作类。
+
+我们来通过这个例子，**重点讲解 `__call__` 的作用**。
+
+---
+
+####  一、`__call__` 是什么？
+
+在 Python 中，如果一个类定义了 `__call__` 方法，那么它的**实例就可以像函数一样被调用**。
+
+例如：
+```python
+add_op = Add()
+z = add_op(x, y)  # ← 这里 add_op 被“当作函数”调用
+```
+实际上，这等价于：
+```python
+z = add_op.__call__(x, y)
+```
+
+所以，`__call__` 的作用是：**让对象具有“可调用性”**（callable），使用起来更自然、简洁。
+
+---
+
+#### 🧩 二、结合你的代码：`__call__` 的具体作用
+
+##### 1. **基类 `Op` 中的 `__call__`**
+```python
+class Op(object):
+    def __call__(self, *inputs):
+        return self.forward(*inputs)
+```
+- 它统一规定：**所有操作（Op 的子类）被调用时，自动执行 `forward` 方法**。
+- 这是一种**设计模式**：把“调用对象”和“前向计算”绑定起来。
+
+##### 2. **子类 `Add` 的实现**
+```python
+class Add(Op):
+    def __call__(self, x, y):          # ← 可省略！因为基类已有通用实现
+        return self.forward(x, y)
+
+    def forward(self, x, y):
+        self.x = x
+        self.y = y
+        return x + y
+```
+
+> 💡 实际上，`Add` 中的 `__call__` **完全可以删除**！因为基类 `Op` 的 `__call__` 已经能正确调用 `forward`。  
+> 保留它只是为了显式说明逻辑（教学目的）。
+
+---
+
+#### 🔁 三、执行流程演示（以你的 `main` 为例）
+
+```python
+add_op = Add()      # 创建 Add 操作对象
+z = add_op(x, y)    # ← 触发 __call__ → 调用 forward
+```
+
+执行过程：
+1. `add_op(x, y)` → 调用 `add_op.__call__(x, y)`
+2. `__call__` 内部调用 `self.forward(x, y)`
+3. `forward` 执行 `x + y`，并保存 `x`, `y` 到 `self.x`, `self.y`（为反向传播准备）
+4. 返回结果 `z = 5`
+
+之后调用：
+```python
+grads_x, grads_y = add_op.backward(grads=1)
+```
+- 利用之前保存的 `self.x`, `self.y`（虽然这里没用到值，但结构上保留了输入）
+- 根据链式法则：∂z/∂x = 1，∂z/∂y = 1，所以梯度都是 `1 * grads = 1`
+
+---
+
+#### ✅ 四、为什么这样设计？好处是什么？
+
+| 设计 | 好处 |
+|------|------|
+| **`op(input)` 代替 `op.forward(input)`** | 代码更简洁、像函数一样自然 |
+| **统一通过 `__call__` 调用 `forward`** | 所有 Op 子类行为一致，便于框架扩展 |
+| **在 `forward` 中缓存输入** | 为 `backward` 提供必要信息（如乘法需要保存 x 和 y） |
+
+这正是 **PyTorch / TensorFlow 等框架的核心思想**：
+```python
+# PyTorch 风格
+linear = nn.Linear(3, 1)
+output = linear(x)  # ← 实际调用 linear.__call__ → linear.forward(x)
+```
+
+---
+
+#### 🧪 五、动手验证：删除 `Add` 中的 `__call__` 会怎样？
+
+修改 `Add` 类：
+```python
+class Add(Op):
+    def forward(self, x, y):
+        self.x = x
+        self.y = y
+        return x + y
+
+    def backward(self, grads):
+        return grads, grads
+```
+
+运行结果**完全一样**！因为基类 `Op` 的 `__call__` 已经处理了调用逻辑。
+
+---
+
+#### ✅ 总结：`__call__` 的作用
+
+> **`__call__` 让操作对象（如 `Add()`）可以像函数一样被调用，并自动触发前向计算（`forward`），使代码更简洁、符合直觉，同时为自动微分框架提供统一接口。**
+
+这是构建深度学习框架（如你正在实现的 `nndl`）的关键设计之一。
+
 ### 1.2 乘法算子、指数算子
 
 > basics/op_mul.py and basics/op_exp.py
@@ -965,3 +1081,91 @@ person("Bob", 25, city="NYC", job="Engineer")
   - 训练过程使用DataLoader加载批量数据
   - 模型加载与保存中, 模型参数使用state_dict方法获取，使用state_dict加载
 
+## self 含义
+
+在 Python（以及其他面向对象语言）中，**`self` 是类实例（对象）自身的引用**。它是类方法的第一个参数，用于访问该实例的**属性**（数据）。
+
+---
+
+### 举个简单例子
+
+```python
+class Dog:
+    def __init__(self, name):
+        self.name = name  # self.name 是这个 Dog 实例的属性
+
+    def bark(self):
+        print(f"{self.name} says woof!")  # 通过 self 访问自己的名字
+
+# 创建两个 Dog 实例
+dog1 = Dog("Buddy")
+dog2 = Dog("Max")
+
+dog1.bark()  # 输出: Buddy says woof!
+dog2.bark()  # 输出: Max says woof!
+```
+
+- `self` 在 `bark()` 中代表**当前调用该方法的那个 Dog 对象**。
+- 当你调用 `dog1.bark()` 时，Python 自动把 `dog1` 作为 `self` 传进去。
+- 所以 `self.name` 就是 `dog1.name`。
+
+---
+
+### 🔑 `self` 的核心作用
+
+| 作用 | 说明 |
+|------|------|
+| **1. 区分实例属性和局部变量** | 没有 `self`，Python 不知道你是想用对象的属性，还是函数内部的临时变量 |
+| **2. 让方法能操作当前对象的数据** | 通过 `self.x`、`self.method()` 访问自己的数据和方法 |
+| **3. 支持多个实例互不干扰** | 每个实例有自己的 `self`，数据独立 |
+
+---
+
+### ❓ 为什么叫 `self`？可以改名吗？
+
+- **可以改名**！`self` 只是一个**约定俗成的名字**，你写成 `this`、`me` 也行：
+  ```python
+  def bark(me):
+      print(me.name)
+  ```
+- 但 **强烈建议用 `self`**，这是 Python 社区标准，所有开发者都这么写。
+
+> 💡 注意：**调用方法时不需要传 `self`**！Python 自动传入当前实例。
+
+```python
+dog.bark()  # 正确：Python 自动传 dog 作为 self
+dog.bark(dog)  # 错误！会报错：多传了一个参数
+```
+
+---
+
+### 🧠 类比理解
+
+想象 `self` 就像“**我自己**”：
+
+- 当你说“**我的名字**”，在程序里就是 `self.name`
+- 当你说“**我跑起来**”，在程序里就是 `self.run()`
+
+每个对象都有自己的“我”，互不混淆。
+
+---
+
+### ⚠️ 常见误区
+
+| 错误写法 | 问题 |
+|--------|------|
+| 忘记写 `self` 作为第一个参数 | 调用时会报错：`TypeError: bark() takes 0 positional arguments but 1 was given` |
+| 在方法内用 `name` 而不是 `self.name` | 会当成局部变量，无法访问实例属性 |
+| 在类外手动传 `self` | 不需要！Python 自动处理 |
+
+---
+
+### ✅ 总结
+
+> **`self` 就是“这个对象自己”**。  
+> 它让你在类的方法中：
+> - **读写自己的属性**（如 `self.x = 10`）
+> - **调用自己的其他方法**（如 `self.other_method()`）
+> - **确保每个实例的数据独立**
+
+这是面向对象编程（OOP）的基石，理解 `self` 是掌握 Python 类的关键！

@@ -2,6 +2,9 @@ from basics.op import Op
 
 class Add(Op):
     def __init__(self):
+        """
+        通过super继承父类中的属性
+        """
         super(Add, self).__init__()
     def __call__(self, x, y):
         return self.forward(x, y)

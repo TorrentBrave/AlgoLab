@@ -190,7 +190,7 @@ $$Test Error ≤ Training Error + Complexity Penalty$$
 
 ## 2.1 线性最小二乘法求解析解
 
-这是一个非常关键且经典的问题！我们来一步步推导 **线性最小二乘的解析解**，也就是为什么最优参数是：
+这是一个非常关键且经典的问题！我们来一步步推导 **线性最小二乘的解析解**, 也就是为什么最优参数是：
 
 $$
 \boldsymbol{\theta}^* = (X^\top X)^{-1} X^\top \mathbf{y}
@@ -393,4 +393,323 @@ y = 2 * x + 1 + noise                # 带噪声的标签
 ```
 
 ## 2.3 模型构建
-`在`
+`线性回归中, 自变量为样本的特征向量` $\boldsymbol{x}\in \mathbb{R}^D$ `每一维对应一个自变量`, `因变量是连续值的标签` $y\in R$, 线性模型定义为:
+$$
+f(\boldsymbol{x};\boldsymbol{w},b)=\boldsymbol{w}^T\boldsymbol{x}+b
+$$
+`其中权重向量` $\boldsymbol{w}\in \mathbb{R}^D$ `和偏置` $b\in \mathbb{R}$ `都是可学习的参数`
+- **增广权重向量**定义模型能保持表达的简洁性
+- **非增广权重向量**能保持和代码的一致性
+
+实践中, 为了提高预测样本的效率, 通常会将 $N$ 样本归为一组进行成批地预测, 可以更好地利用GPU设备的并行能力
+$$
+\boldsymbol{y} =\boldsymbol{X} \boldsymbol{w} + b
+$$
+`其中` $\boldsymbol{X}\in \mathbb{R}^{N\times D}$ 为 $N$ 个样本的特征矩阵, $\boldsymbol{y}\in \mathbb{R}^N$ 为 $N$ 个预测值组成的列向量. ***它会是被实现的线性算子***
+
+`实践中, 样本的矩阵` $X$ `是由` $N$ `个` $x$的 `行向量组成`, 教材中 $x$ `为列向量`, `特征矩阵和教材中的特征向量刚好是转置关系`
+
+### 线性算子
+- $X: tensor, shape=[N,D]$
+- $y_{pred}: tensor, shape=[N]$
+- $w: shape=[D,1]$
+- $b: shape=[1]$
+- $y_{pred} = torch.matmul(X,w)+b$
+
+## 2.4 损失函数
+`回归任务是对`**连续值**的预测, 希望模型能根据数据的特征输出一个连续值作为预测值, 因此回归任务中常用的评估指标 是 **均方误差**
+令 $\boldsymbol{y}\in \mathbb{R}^N$, $\hat{\boldsymbol{y}}\in \mathbb{R}^N$ 分别为 $N$ 个样本的真实标签和预测标签, 均方误差的定义:
+
+$$
+\mathcal{L}(\boldsymbol{y},\hat{\boldsymbol{y}})=\frac{1}{2N}\|\boldsymbol{y}-\hat{\boldsymbol{y}}\|^2=\frac{1}{2N}\|\boldsymbol{X}\boldsymbol{w}+\boldsymbol{b}-\boldsymbol{y}\|^2
+$$
+
+`其中` $b$ 为 $N$ 维向量, 所有元素取值都为 $b$
+
+## 2.5 模型优化
+**经验风险最小化**, 线性回归可以通过最小二乘法求出参数, $w$ 和 $b$ 的解析解
+
+$$\frac{\partial \mathcal{L}(\boldsymbol{y},\hat{\boldsymbol{y}})}{\partial b} = \mathbf{1}^T (\boldsymbol{X}\boldsymbol{w}+\boldsymbol{b}-\boldsymbol{y})$$
+
+`其中`$1$为$N$维的全1向量, 为了简洁省略了均方误差的系数, $\frac{1}{N}$, **并不影响最后的结果**, `令上式等于0, 得到:`
+
+$$
+b^* =\bar{y}-\bar{\boldsymbol{x}}^T \boldsymbol{w}
+$$
+
+`其中`$\bar{y} = \frac{1}{N}\mathbf{1}^T\boldsymbol{y}$为所有标签的平均值, $\bar{\boldsymbol{x}} = \frac{1}{N}(\mathbf{1}^T \boldsymbol{X})^T$, 为所有特征向量的平均值, 将 $b^*$ 代入均方误差对参数 $w$ 的偏导数, 得到:
+
+$$
+\frac{\partial \mathcal{L}(\boldsymbol{y},\hat{\boldsymbol{y}})}{\partial \boldsymbol{w}} = (\boldsymbol{X}-\bar{\boldsymbol{x}}^T)^T \Big((\boldsymbol{X}-\bar{\boldsymbol{x}}^T)\boldsymbol{w}-(\boldsymbol{y}-\bar{y})\Big)
+$$
+
+令上式等于 0, 得到最优参数:
+
+$$
+\boldsymbol{w}^*=\Big((\boldsymbol{X}-\bar{\boldsymbol{x}}^T)^T(\boldsymbol{X}-\bar{\boldsymbol{x}}^T)\Big)^{\mathrm{-}1}(\boldsymbol{X}-\bar{\boldsymbol{x}}^T)^T (\boldsymbol{y}-\bar{y})
+$$
+
+$$
+b^* =  \bar{y}-\bar{\boldsymbol{x}}^T \boldsymbol{w}^*
+$$
+
+若对参数$w$加上$l_2$正则化系数, $\boldsymbol{I}\in \mathbb{R}^{D\times D}$ 为单位矩阵,$\lambda>0$为预先设置的正则化系数
+
+$$
+\boldsymbol{w}^*=\Big((\boldsymbol{X}-\bar{\boldsymbol{x}}^T)^T(\boldsymbol{X}-\bar{\boldsymbol{x}}^T)+\lambda \boldsymbol{I}\Big)^{\mathrm{-}1}(\boldsymbol{X}-\bar{\boldsymbol{x}}^T)^T (\boldsymbol{y}-\bar{y})
+$$
+
+参数学习的过程通过优化器完成。由于我们可以基于最小二乘方法可以直接得到线性回归的解析解，此处的训练是求解析解的过程
+
+## 什么时候进行转置
+
+这是一个非常好的问题，涉及到**矩阵维度一致性**和**向量表示习惯**（行向量 vs 列向量）。
+
+---
+
+### 🔍 背景：数据矩阵 $\boldsymbol{X}$ 的形状
+
+在你给出的上下文中，线性回归的输入数据矩阵 $\boldsymbol{X} \in \mathbb{R}^{N \times D}$，其中：
+- $N$：样本数量
+- $D$：特征维度
+- **每一行是一个样本**（这是机器学习中最常见的约定）
+
+例如：
+$$
+\boldsymbol{X} = 
+\begin{bmatrix}
+x_{11} & x_{12} & \cdots & x_{1D} \\
+x_{21} & x_{22} & \cdots & x_{2D} \\
+\vdots & \vdots & \ddots & \vdots \\
+x_{N1} & x_{N2} & \cdots & x_{ND}
+\end{bmatrix}
+$$
+
+---
+
+### 📌 目标：计算特征的均值向量 $\bar{\boldsymbol{x}}$
+
+我们希望得到一个 **$D$ 维的列向量**，表示每个特征在所有样本上的平均值：
+
+$$
+\bar{\boldsymbol{x}} = 
+\begin{bmatrix}
+\frac{1}{N} \sum_{i=1}^N x_{i1} \\
+\frac{1}{N} \sum_{i=1}^N x_{i2} \\
+\vdots \\
+\frac{1}{N} \sum_{i=1}^N x_{iD}
+\end{bmatrix}
+\in \mathbb{R}^{D}
+$$
+
+---
+
+### 为什么用 $\frac{1}{N}(\mathbf{1}^T \boldsymbol{X})^T$？
+
+1. **$\mathbf{1} \in \mathbb{R}^N$** 是全 1 列向量。
+2. **$\mathbf{1}^T \boldsymbol{X}$** 的维度是：
+   $$
+   (1 \times N) \cdot (N \times D) = (1 \times D)
+   $$
+   结果是一个 **行向量**，其第 $j$ 个元素是 $\sum_{i=1}^N x_{ij}$，即第 $j$ 个特征的总和。
+
+3. 但我们要的是 **列向量**（$D \times 1$），所以需要 **转置**：
+   $$
+   (\mathbf{1}^T \boldsymbol{X})^T \in \mathbb{R}^{D \times 1}
+   $$
+
+4. 再除以 $N$，就得到均值列向量：
+   $$
+   \bar{\boldsymbol{x}} = \frac{1}{N} (\mathbf{1}^T \boldsymbol{X})^T
+   $$
+
+---
+
+### ✅ 举个数值例子
+
+设：
+$$
+\boldsymbol{X} = 
+\begin{bmatrix}
+1 & 2 \\
+3 & 4 \\
+5 & 6
+\end{bmatrix}, \quad
+\mathbf{1} = 
+\begin{bmatrix}
+1 \\ 1 \\ 1
+\end{bmatrix}
+$$
+
+则：
+$$
+\mathbf{1}^T \boldsymbol{X} = 
+\begin{bmatrix}
+1 & 1 & 1
+\end{bmatrix}
+\begin{bmatrix}
+1 & 2 \\
+3 & 4 \\
+5 & 6
+\end{bmatrix}
+= 
+\begin{bmatrix}
+9 & 12
+\end{bmatrix} \quad \text{（行向量）}
+$$
+
+转置后：
+$$
+(\mathbf{1}^T \boldsymbol{X})^T = 
+\begin{bmatrix}
+9 \\ 12
+\end{bmatrix}
+\quad \Rightarrow \quad
+\bar{\boldsymbol{x}} = \frac{1}{3}
+\begin{bmatrix}
+9 \\ 12
+\end{bmatrix}
+=
+\begin{bmatrix}
+3 \\ 4
+\end{bmatrix}
+$$
+
+✅ 这正是每列的平均值，且是**列向量**。
+
+---
+
+### ❓ 什么时候需要转置？
+
+| 情况 | 是否需要转置 | 原因 |
+|------|------------|------|
+| **$\boldsymbol{X}$ 每行是一个样本**（$N \times D$） | ✅ 需要 | $\mathbf{1}^T \boldsymbol{X}$ 是行向量，但均值通常表示为列向量 |
+| **$\boldsymbol{X}$ 每列是一个样本**（$D \times N$） | ❌ 不需要 | $\boldsymbol{X} \mathbf{1}$ 直接得到列向量 |
+
+> 📌 在绝大多数机器学习库（如 scikit-learn、PyTorch、TensorFlow）中，**数据矩阵都是“样本在行”**（$N \times D$），所以**需要转置**来得到列向量形式的均值。
+
+---
+
+### 💡 补充：也可以写成 $\bar{\boldsymbol{x}} = \frac{1}{N} \boldsymbol{X}^T \mathbf{1}$
+
+注意：
+$$
+(\mathbf{1}^T \boldsymbol{X})^T = \boldsymbol{X}^T \mathbf{1}
+$$
+
+所以更常见的写法其实是：
+$$
+\bar{\boldsymbol{x}} = \frac{1}{N} \boldsymbol{X}^T \mathbf{1}
+$$
+
+这直接得到列向量，**无需显式写转置**，也更符合线性代数习惯。
+
+---
+
+### ✅ 总结
+
+> **之所以写成 $\bar{\boldsymbol{x}} = \frac{1}{N}(\mathbf{1}^T \boldsymbol{X})^T$，是因为：**
+>
+> 1. $\mathbf{1}^T \boldsymbol{X}$ 计算的是每列（每个特征）的总和，结果是 **行向量**；
+> 2. 但我们需要均值是 **列向量**（与权重 $\boldsymbol{w}$ 维度一致，便于计算 $\bar{\boldsymbol{x}}^T \boldsymbol{w}$）；
+> 3. 因此必须 **转置**，使其从 $(1 \times D)$ 变为 $(D \times 1)$。
+>
+> **只要数据矩阵是“样本在行”**（$N \times D$），计算列均值时就需要这个转置（或等价地用 $\boldsymbol{X}^T \mathbf{1}$）
+
+## 为什么进行正则化
+
+你问了一个非常核心的问题：**为什么要在最优参数 $\boldsymbol{w}^*$ 上加 $ \ell_2 $ 正则化**（即岭回归）？
+
+我们从**动机、问题、解决方案**三个层面来解释。
+
+---
+
+### 🔍 1. **不加正则化时，可能遇到什么问题**？
+
+你给出的原始解是：
+$$
+\boldsymbol{w}^* = \left( (\boldsymbol{X} - \bar{\boldsymbol{x}}^T)^T (\boldsymbol{X} - \bar{\boldsymbol{x}}^T) \right)^{-1} (\boldsymbol{X} - \bar{\boldsymbol{x}}^T)^T (\boldsymbol{y} - \bar{y})
+$$
+
+这个解成立的前提是：  
+> **矩阵 $ \boldsymbol{X}^T \boldsymbol{X} $（或中心化后的）必须可逆**（即满秩）。
+
+但在实际中，常常出现以下情况：
+
+#### ❌ 问题 1：**特征数 $D$ 大于样本数 $N$**（高维小样本）
+- 例如：基因数据（$D=20000$ 个基因，$N=100$ 个病人）
+- 此时 $\boldsymbol{X} \in \mathbb{R}^{N \times D}$，秩最多为 $N < D$
+- 所以 $\boldsymbol{X}^T \boldsymbol{X}$ 是 **奇异矩阵**（不可逆），**解析解不存在**！
+
+#### ❌ 问题 2：**特征之间高度相关**（共线性）
+- 例如：`身高（cm）` 和 `身高（inch）` 同时作为特征
+- 导致 $\boldsymbol{X}^T \boldsymbol{X}$ **接近奇异**，数值不稳定
+- 微小的数据扰动会导致 $\boldsymbol{w}^*$ 剧烈变化（过拟合）
+
+#### ❌ 问题 3：**过拟合**
+- 即使矩阵可逆，如果模型太复杂（比如高维），$\boldsymbol{w}^*$ 可能取**非常大的值**去拟合训练噪声
+- 虽然训练误差低，但测试误差高
+
+---
+
+### ✅ 2. **加 $\ell_2$ 正则化如何解决这些问题**？
+
+正则化后的目标函数变为：
+$$
+\mathcal{L}_{\text{reg}} = \|\boldsymbol{y} - \boldsymbol{X}\boldsymbol{w} - b\|^2 + \lambda \|\boldsymbol{w}\|^2
+$$
+
+对应的解是：
+$$
+\boldsymbol{w}^* = \left( \boldsymbol{X}_c^T \boldsymbol{X}_c + \lambda \boldsymbol{I} \right)^{-1} \boldsymbol{X}_c^T \boldsymbol{y}_c
+$$
+（其中 $\boldsymbol{X}_c, \boldsymbol{y}_c$ 是中心化后的数据）
+
+#### ✅ 效果 1：**保证矩阵可逆**
+- $\boldsymbol{X}_c^T \boldsymbol{X}_c$ 是半正定的，加上 $\lambda \boldsymbol{I}$（$\lambda > 0$）后变成**正定矩阵**
+- **一定可逆**！即使 $D > N$ 或存在共线性
+
+#### ✅ 效果 2：**抑制参数过大**
+- 正则项 $\lambda \|\boldsymbol{w}\|^2$ 惩罚大权重
+- 优化器会在“拟合数据”和“保持 $\boldsymbol{w}$ 小”之间权衡
+- 得到的 $\boldsymbol{w}^*$ 更平滑、更稳定
+
+#### ✅ 效果 3：**缓解过拟合，提升泛化能力**
+- 小的 $\boldsymbol{w}$ 意味着模型对输入不敏感，不容易拟合噪声
+- 测试误差通常更低（尤其在小样本或高维场景）
+
+---
+
+### 直观例子：拟合一条直线
+
+假设你只有 2 个点，但用 10 次多项式去拟合：
+- 无正则化：曲线剧烈震荡，完美过拟合两点
+- 加 $\ell_2$ 正则化：曲线更平滑，虽然训练误差略高，但更接近真实趋势
+
+> **正则化 = 用一点偏差（bias）换大幅降低方差（variance）**
+
+---
+
+### 📌 为什么是 $\ell_2$ 而不是 $\ell_1$？
+- $\ell_2$（岭回归）：**保持所有特征，但缩小权重**，解析解存在，计算高效
+- $\ell_1$（Lasso）：**会把某些权重压到 0，实现特征选择**，但无解析解，需迭代优化
+
+在线性回归中，**$\ell_2$ 是最常用、最稳定的正则化方式**。
+
+---
+
+### ✅ 总结：为什么要加正则化？
+
+| 问题 | 正则化的作用 |
+|------|------------|
+| 矩阵不可逆（$D > N$） | ✅ 使 $\boldsymbol{X}^T\boldsymbol{X} + \lambda I$ 可逆 |
+| 特征共线性 | ✅ 提高数值稳定性 |
+| 过拟合 | ✅ 限制参数大小，提升泛化能力 |
+| 参数过大 | ✅ 引入先验：更相信“小权重”模型 |
+
+> **加 $\ell_2$ 正则化不是为了“改变最优解”，而是为了在现实约束下（数据少、特征多、噪声大）得到一个“更可靠、更泛化”的解。**
+
+这就是**结构风险最小化**（Structural Risk Minimization）的思想：  
+**不仅拟合训练数据，还要控制模型复杂度**
+
+## 2.6 模型训练
