@@ -24,4 +24,4 @@ def plot(runner,fig_name):
     plt.legend(loc='lower right', fontsize='x-large')
     plt.tight_layout()
     plt.savefig(fig_name)
-    # plt.show()
+    plt.show()

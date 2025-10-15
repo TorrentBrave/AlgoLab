@@ -34,7 +34,7 @@ class Runner(object):
             self.train_loss.append(trn_loss)
             # 计算评价指标
             trn_score = self.metric(logits, y).item()
-            self.train_scores.append(trn_score)
+            self.train_scores.append(trn_loss)
             # 计算参数梯度
             self.model.backward(y)
             if print_grads is not None:
