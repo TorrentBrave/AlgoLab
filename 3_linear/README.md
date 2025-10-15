@@ -58,3 +58,45 @@ $$
 $$
 
 > 通常将偏导数的计算过程定义在Logistic回归算子的backward函数中
+
+### 2 参数更新
+`计算参数的梯度后, 按公式更新参数`
+
+$$
+\mathbf w\leftarrow \mathbf w - \alpha \frac{\partial \cal R(\mathbf w,b)}{\partial \mathbf w}
+$$
+
+$$
+\mathbf w\leftarrow \mathbf w - \alpha \frac{\partial \cal R(\mathbf w,b)}{\partial \mathbf w}
+$$
+
+其中 $\alpha$ 为学习率
+
+> 将上面的参数更新过程包装为优化器,首先定义一个优化器基类Optimizer,方便后续所有的优化器调用。在这个基类中,需要初始化优化器的初始学习率init_lr,以及指定优化器需要优化的参数
+
+### 3 评价指标
+`在分类任务中, 通常使用准确率(Accuracy)作为评价指标`
+
+$$
+\mathcal{A} 
+= 
+\frac{1}{N}
+	\sum_{n=1}^N
+    I
+    	(y^{(n)} = \hat{y}^{(n)})
+$$
+
+`其中` $I(·)$ 是指示函数
+
+> 指示函数（Indicator Function）是一个 数学上的"开关函数", 它的值只有两种:
+>
+> 当条件成立时,取值为 1
+>
+> 当条件不成立时,取值为 0
+
+**dim**: 表示沿着哪个维度进行操作
+
+| 维度 | 含义（在2D张量里）| torch.argmax(..., dim=?) 的含义 |
+|-----|-----|-----|
+| dim=0 | 纵向（跨行） | 在每一“列”中找最大值（比较上下） |
+| dim=1 | 横向（跨列） | 在每一“行”中找最大值（比较左右） |

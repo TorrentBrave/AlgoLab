@@ -27,10 +27,14 @@ class model_LR(Op):
         super(model_LR, self).__init__()
 
         self.params = {}
-        # self.params['w'] = torch.zeros((input_dim, 1), dtype=torch.float32) # 线性层的权重参数初始化为0
-        self.params['w'] = torch.normal(mean=0, std=0.01, size=(input_dim, 1), dtype=torch.float32) * 0.01 # 线性层的权重参数全部随机高斯分布
+        self.params['w'] = torch.zeros((input_dim, 1), dtype=torch.float32) # 线性层的权重参数初始化为0
+        # self.params['w'] = torch.normal(mean=0, std=0.01, size=(input_dim, 1), dtype=torch.float32) * 0.01 # 线性层的权重参数全部随机高斯分布
         # 乘以 0.01 是为了 让权重初始化更小、训练更稳定, 防止梯度爆炸或消失，是一种简易但有效的初始化策略
         self.params['b'] = torch.zeros(1, dtype=torch.float32)
+
+        self.grads = {}
+        self.X = None
+        self.outputs = None
 
     def __call__(self, inputs):
         return self.forward(inputs)
@@ -41,11 +45,22 @@ class model_LR(Op):
         输出:
             - outputs: 预测标签为1的概率, shape=[N,1]
         """
+        self.X = inputs
         # 线性计算
         score = torch.matmul(inputs, self.params['w']) + self.params['b']
         # Logistic 函数
-        outputs = logistic(score)
-        return outputs
+        self.outputs = logistic(score)
+        return self.outputs
+
+    def backward(self, labels):
+        """
+        输入:
+            - labels: 真实标签, shape=[N, 1]
+        """
+        N = labels.shape[0]
+        # 计算偏导数
+        self.grads['w'] = -1 / N * torch.matmul(self.X.T, (labels - self.outputs))
+        self.grads['b'] = -1 / N * torch.sum(labels - self.outputs)
 
 class BinaryCrossEntropyLoss(Op):
     def __init__(self):
@@ -67,11 +82,8 @@ class BinaryCrossEntropyLoss(Op):
         self.predicts = predicts
         self.labels = labels
         self.num = self.predicts.shape[0]
-
-        loss = (-1. / self.num) * (torch.matmul(self.labels.T, torch.log(self.predicts)) + torch.matmul((1 - self.labels.T), torch.log(1 - self.predicts)))
-
+        loss = -1. / self.num * (torch.matmul(self.labels.T, torch.log(self.predicts)) + torch.matmul((1 - self.labels.T), torch.log(1 - self.predicts)))
         loss = torch.squeeze(loss, axis=1)
-
         return loss
 
 

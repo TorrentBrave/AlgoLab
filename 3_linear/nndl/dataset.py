@@ -1,6 +1,7 @@
 import math
 import copy
 import torch
+torch.manual_seed(42)
 
 def make_moons(n_samples=1000, shuffle=True, noise=None):
     """
@@ -57,7 +58,27 @@ def make_moons(n_samples=1000, shuffle=True, noise=None):
 
     return X, y
 
+X, y = make_moons(n_samples=1000, noise=0.05)
+num_train = 640
+num_dev = 160
+num_test = 200
+
+X_train, y_train = X[:num_train], y[:num_train]
+X_dev, y_dev = X[num_train:num_train+num_dev], y[num_train:num_train+num_dev]
+X_test, y_test = X[num_train+num_dev:], y[num_train+num_dev:]
+
+y_train = y_train.reshape([-1,1])
+y_dev = y_dev.reshape([-1,1])
+y_test = y_test.reshape([-1,1])
+
+print("X_train shape: ", X_train.shape, "y_train shape: y_train.shape")
+
+print("y_train[:5]: ", y_train[:5])
+
 if __name__ == "__main__":
+    # --------------------------------------------------
+    # View Data
+    # --------------------------------------------------
     import matplotlib.pyplot as plt
     torch.manual_seed(42)
     X, y = make_moons(n_samples=1000, noise=0.05)
