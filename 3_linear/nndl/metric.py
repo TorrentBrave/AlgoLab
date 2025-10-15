@@ -9,8 +9,8 @@ def accuracy(preds, labels):
         - 准确率: shape=[1]
     """
     # 确保标签是 1D (避免 [N, 1] 形状问题)
-    if labels.ndim > 1:
-        labels = labels.squeeze(1)
+    # if labels.ndim > 1:
+    #     labels = labels.squeeze(1)
 
     # 判断是二分类任务还是多分类任务,preds.shape[1]=1时为二分类任务，preds.shape[1]>1时为多分类任务
     if preds.shape[1] == 1:
