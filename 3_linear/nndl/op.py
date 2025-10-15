@@ -27,8 +27,8 @@ class model_LR(Op):
         super(model_LR, self).__init__()
 
         self.params = {}
-        self.params['w'] = torch.zeros((input_dim, 1), dtype=torch.float32) # 线性层的权重参数初始化为0
-        # self.params['w'] = torch.normal(mean=0, std=0.01, size=(input_dim, 1), dtype=torch.float32) * 0.01 # 线性层的权重参数全部随机高斯分布
+        # self.params['w'] = torch.zeros((input_dim, 1), dtype=torch.float32) # 线性层的权重参数初始化为0
+        self.params['w'] = torch.normal(mean=0, std=0.01, size=(input_dim, 1), dtype=torch.float32) * 0.01 # 线性层的权重参数全部随机高斯分布
         # 乘以 0.01 是为了 让权重初始化更小、训练更稳定, 防止梯度爆炸或消失，是一种简易但有效的初始化策略
         self.params['b'] = torch.zeros(1, dtype=torch.float32)
 

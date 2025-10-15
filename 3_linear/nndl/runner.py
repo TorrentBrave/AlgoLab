@@ -42,7 +42,7 @@ class Runner(object):
                 print_grads(self.model)
             # 更新模型参数
             self.optimizer.step()
-            dev_score, dev_loss = self.evaluate(dev_set)
+            dev_score, dev_loss = self.evaluate(dev_set) # 如果把 该代码放到更新参数前, 会改变模型中X的状态, 变成验证集
             if dev_score > best_score:
                 self.save_model(save_path)
                 print(f"best accuracy performence has been updated: {best_score:.5f} --> {dev_score:.5f}")
