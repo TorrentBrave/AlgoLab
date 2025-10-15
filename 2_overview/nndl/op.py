@@ -56,6 +56,6 @@ if __name__ == "__main__":
     input_size = 3
     N = 2
     X = torch.randn((N, input_size), dtype=torch.float32) # 生成 2个维度为3 的数据
-    model = Linear(input_size)
-    y_pred = model(X)
+    model = Linear(input_size) # 进入的 是 __init__ 定义了对象的 一些属性
+    y_pred = model(X) # 进入的 是 __call__
     print("y_pred:", y_pred) # 输出结果的个数也是 2个
