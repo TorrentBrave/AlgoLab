@@ -73,6 +73,8 @@ y_test = y_test.reshape([-1,1])
 
 print("X_train shape: ", X_train.shape, "y_train shape: y_train.shape")
 
+print("X_train[:5]: ", X_train[:5])
+
 print("y_train[:5]: ", y_train[:5])
 
 if __name__ == "__main__":
