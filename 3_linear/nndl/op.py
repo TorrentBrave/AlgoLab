@@ -1,5 +1,6 @@
 import torch
 import torch.nn.functional as F
+from activation import softmax
 
 torch.manual_seed(10) # 设置随机种子
 
@@ -21,6 +22,8 @@ def logistic(x):
     定义: Logistic函数
     """
     return 1 / (1 + torch.exp(-x))
+
+
 
 class model_LR(Op):
     def __init__(self, input_dim):

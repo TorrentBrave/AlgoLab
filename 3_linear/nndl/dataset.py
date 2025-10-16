@@ -179,7 +179,22 @@ if __name__ == "__main__":
     X, y = make_multiclass_classification(n_samples=n_samples, n_features=2, n_classes=3, noise=0.2)
 
     # 可视化生产的数据集，不同颜色代表不同类别
-    plt.figure(figsize=(5,5))
-    plt.scatter(x=X[:, 0].tolist(), y=X[:, 1].tolist(), marker='*', c=y.tolist())
-    plt.savefig('linear-dataset-vis2.png')
-    plt.show()
+    # plt.figure(figsize=(5,5))
+    # plt.scatter(x=X[:, 0].tolist(), y=X[:, 1].tolist(), marker='*', c=y.tolist())
+    # plt.savefig('linear-dataset-vis2.png')
+    # plt.show()
+
+    num_train = 640
+    num_dev = 160
+    num_test = 200
+
+    X_train, y_train = X[:num_train], y[:num_train]
+    X_dev, y_dev = X[num_train:num_train + num_dev], y[num_train:num_train + num_dev]
+    X_test, y_test = X[num_train + num_dev:], y[num_train + num_dev:]
+
+    # 打印X_train和y_train的维度
+    print("X_train shape: ", X_train.shape, "y_train shape: ", y_train.shape)
+
+    # 打印前5个数据的标签
+    print(y_train[:5])
+
