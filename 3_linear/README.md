@@ -103,7 +103,7 @@ $$
 
 # 多分类
 
-## Softmax
+## 2.1 Softmax
 `解决上下溢出`
 Softmax函数可以将多个标量映射为一个概率分布,对于一个 $K$ 维向量, $\mathbf x=[x_1,\cdots,x_K]$
 
@@ -118,7 +118,7 @@ $$
 
 为了解决上溢出和下溢出的问题, 在计算Softmax函数时, 可以使用 $x_k - \max(\mathbf x)$ 代替 $x_k$. 此时, 通过减去最大值, $x_k$ 最大为0, 避免了上溢出的问题; 同时，分母中至少会包含一个值为1的项, 从而也避免了下溢出的问题
 
-## Softmax回归算子
+## 2.2 Softmax回归算子
 在Softmax回归算子中, 类别标签 $y\in\{1,2,…,C\}$, 给定一个样本 $x$, 使用Softmax回归预测属于类别 $c$ 的条件概率为 
 
 $$
@@ -146,6 +146,38 @@ $$
 > $\boldsymbol{XW}\in \mathbb{R}^{N \times C}$, 每个样本得到四个类别的得分
 
 > 偏置项 $\boldsymbol{b}\in \mathbb{R}^{C}$
+
+## 2.3 损失函数
+`Softmax回归同样使用交叉熵损失作为损失函数,并使用梯度下降法对参数进行优化.通常使用维的one-hot类型向量
+来表示多分类任务中的类别标签.对于类别 $c$, 其向量表示:`
+
+$$
+\mathbf y = [I(1=c),I(2=c),…,I(C=c)]^T
+$$
+
+其中 $I(·)$ 是指示函数,即括号内的输入为“真”, $I(·)=1$; 否则, $I(·)=0$
+
+给定有 $N$ 个训练样本的训练集 $\{(\mathbf x^{(n)},y^{(n)})\} ^N_{n=1}$, 令 $\hat{\mathbf y}^{(n)}=\mathrm{softmax}(\mathbf W^ \mathrm{ T } \mathbf x^{(n)}+\mathbf b)$ 为样本 $\mathbf x^{(n)}$ 在每个类别的后验概率. 多分类问题的交叉熵损失函数定义为:
+
+$$
+\cal R(\mathbf W,\mathbf b) = -\frac{1}{N}\sum_{n=1}^N (\mathbf y^{(n)})^ \mathrm{ T } \log\hat{\mathbf y}^{(n)} = -\frac{1}{N}\sum_{n=1}^N \sum_{c=1}^C \mathbf y_c^{(n)} \log\hat{\mathbf y}_c^{(n)}
+$$
+
+$\mathbf y_c^{(n)}$在 $c$ 为真实类别时为 1, 其余为 0, 也就是说, 交叉熵损失只关心正确类别的预测概率:
+
+$$
+\cal R(\mathbf W,\mathbf b) = -\frac{1}{N}\sum_{n=1}^N \log [\hat{\mathbf y}^{(n)}]_{y^{(n)}}
+$$
+
+$y^{(n)}$ 是 第 n 个样本的标签, 从信息量的角度看, 信息越确定, 信息量越小, 信息发生的概率越小, 信息量越大
+
+
+## 2.4 模型优化
+`使用梯度下降法进行参数学习`
+
+### 1 梯度计算
+
+
 
 # b, W, A 变换？ 解释!
 

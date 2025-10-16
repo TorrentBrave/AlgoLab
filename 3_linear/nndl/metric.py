@@ -20,7 +20,7 @@ def accuracy(preds, labels):
         preds = (preds >= 0.5).float().squeeze(1) # [N]
     else:
         # 多分类: 取最大概率对应的类别
-        preds = torch.argmax(preds, dim=1, dtype=torch.int32) # [N]
+        preds = torch.argmax(preds, dim=1) # [N]
     acc = (preds == labels).float().mean()
     return acc
 

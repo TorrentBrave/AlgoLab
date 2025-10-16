@@ -1,6 +1,6 @@
 import torch
 import torch.nn.functional as F
-from activation import softmax
+from nndl.activation import softmax
 
 torch.manual_seed(10) # 设置随机种子
 
@@ -22,8 +22,6 @@ def logistic(x):
     定义: Logistic函数
     """
     return 1 / (1 + torch.exp(-x))
-
-
 
 class model_LR(Op):
     def __init__(self, input_dim):
@@ -74,6 +72,10 @@ class model_SR(Op):
         # self.params['w'] = torch.normal(0, 0.01, size=(input_dim, output_dim))
         self.params['b'] = torch.zeros(output_dim)
         self.outputs = None
+        self.grads = {}
+        self.X = None
+        self.outputs = None
+        self.outputs_dim = output_dim
     def __call__(self, inputs):
         return self.forward(inputs)
     def forward(self, inputs):
@@ -84,11 +86,28 @@ class model_SR(Op):
             - outputs: shape=[N,C] C是类别数
         """
         # 线性计算
-        score = torch.matmul(inputs, self.params['w']) + self.params['b']
+        self.X = inputs
+        score = torch.matmul(self.X, self.params['w']) + self.params['b']
         # 初始化 0 的话得分就是 0, 也就是类别数分之的概率为 1/C
         # softmax函数
         self.outputs = softmax(score)
         return self.outputs
+    def backward(self, labels):
+        """
+        输入:
+            - labels: 真实标签, shape=[N, 1]
+        """
+        # 计算偏导数
+        N = labels.shape[0]
+        
+        # 将标签转为 one-hot，确保维度与输出匹配
+        labels = labels.squeeze(1) if labels.ndim > 1 else labels  # [N]
+        labels = labels.long()
+        labels_onehot = F.one_hot(labels, num_classes=self.outputs_dim).float()  # [N, C]
+
+        # 计算梯度
+        self.grads['w'] = -1.0 / N * torch.matmul(self.X.T, (labels_onehot - self.outputs))  # [D, C]
+        self.grads['b'] = -1.0 / N * torch.matmul(torch.ones(N), (labels_onehot - self.outputs))  # [C]
 
 class BinaryCrossEntropyLoss(Op):
     def __init__(self):
@@ -114,6 +133,29 @@ class BinaryCrossEntropyLoss(Op):
         loss = torch.squeeze(loss, axis=1)
         return loss
 
+class MultiCrossEntropyLoss(Op):
+    def __init__(self):
+        self.predicts = None
+        self.labels = None
+        self.num = None
+    def __call__(self, predicts, labels):
+        return self.forward(predicts, labels)
+    def forward(self, predicts, labels):
+        """
+        输入:
+            - predicts: 预测值, shape=[N, 1], N为样本数量, C为类别数
+            - labels: 真实标签, shape=[N, 1]
+        输出:
+            - 损失值: shape=[1]
+        """
+        self.predicts = predicts
+        self.labels = labels
+        self.num = self.predicts.shape[0]
+        loss = 0
+        for i in range(self.num):
+            index = self.labels[i]
+            loss -= torch.log(self.predicts[i][index])
+        return loss / self.num
 
 if __name__ == "__main__":
     # ------------------------------------------------
@@ -164,14 +206,21 @@ if __name__ == "__main__":
     # --------------------------------------------------
     # Softmax_Linear model
     # --------------------------------------------------
-    inputs = torch.randn(3,4)
+    
+    inputs = torch.randn(1,4)
     print('Inputs is: ', inputs)
     # 实例化模型
-    model = model_SR(input_dim=4, output_dim=4)
+    model = model_SR(input_dim=4, output_dim=3)
     outputs = model(inputs) 
     print('Outputs is: ', outputs)
-    """
-    outputs_dim=4 -> 0.25
-    outputs_dim=2 -> 0.5
-    outputs_dim=3 -> 0.3333
-    """
+    
+    # outputs_dim=4 -> 0.25
+    # outputs_dim=2 -> 0.5
+    # outputs_dim=3 -> 0.3333
+    # --------------------------------------------------
+    # MultiCrossEntropyLoss
+    # --------------------------------------------------
+    # 假设真实标签为第 1 类
+    labels = torch.tensor([0])
+    mce_loss = MultiCrossEntropyLoss()
+    print(mce_loss(outputs, labels))

@@ -126,6 +126,26 @@ def make_multiclass_classification(n_samples=100, n_features=2, n_classes=3, shu
     return X, y
 
 
+torch.manual_seed(42)
+# 采样1000个样本
+n_samples = 1000
+X, y = make_multiclass_classification(n_samples=n_samples, n_features=2, n_classes=3, noise=0.2)
+
+num_train = 640
+num_dev = 160
+num_test = 200
+
+X_train, y_train = X[:num_train], y[:num_train]
+X_dev, y_dev = X[num_train:num_train + num_dev], y[num_train:num_train + num_dev]
+X_test, y_test = X[num_train + num_dev:], y[num_train + num_dev:]
+
+# 打印X_train和y_train的维度
+print("X_train shape: ", X_train.shape, "y_train shape: ", y_train.shape)
+
+# 打印前5个数据的标签
+print(y_train[:5])
+
+
 if __name__ == "__main__":
     # --------------------------------------------------
     # View Data
