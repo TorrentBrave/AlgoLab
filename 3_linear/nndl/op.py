@@ -65,6 +65,31 @@ class model_LR(Op):
         self.grads['w'] = -1 / N * torch.matmul(self.X.T, (labels - self.outputs))
         self.grads['b'] = -1 / N * torch.sum(labels - self.outputs)
 
+class model_SR(Op):
+    def __init__(self, input_dim, output_dim):
+        super(model_SR, self).__init__()
+        # 将线性层的权重参数全部初始化为0
+        self.params = {}
+        self.params['w'] = torch.zeros(input_dim, output_dim)
+        # self.params['w'] = torch.normal(0, 0.01, size=(input_dim, output_dim))
+        self.params['b'] = torch.zeros(output_dim)
+        self.outputs = None
+    def __call__(self, inputs):
+        return self.forward(inputs)
+    def forward(self, inputs):
+        """
+        输入:
+            - inputs: shape=[N,D] N是样本数量, D是特征维度
+        输出:
+            - outputs: shape=[N,C] C是类别数
+        """
+        # 线性计算
+        score = torch.matmul(inputs, self.params['w']) + self.params['b']
+        # 初始化 0 的话得分就是 0, 也就是类别数分之的概率为 1/C
+        # softmax函数
+        self.outputs = softmax(score)
+        return self.outputs
+
 class BinaryCrossEntropyLoss(Op):
     def __init__(self):
         self.predicts = None
@@ -118,6 +143,7 @@ if __name__ == "__main__":
     # -------------------------------------------------
     # Logistic function - generate data
     # -------------------------------------------------
+    """
     torch.manual_seed(42)
 
     # 随机生成 3条长度为 4的数据
@@ -134,3 +160,18 @@ if __name__ == "__main__":
     labels = torch.ones(3,1) # 生成长度为3, 值为1的标签数据
     bce_loss = BinaryCrossEntropyLoss()
     print("bce_loss:", bce_loss(outputs, labels))
+    """
+    # --------------------------------------------------
+    # Softmax_Linear model
+    # --------------------------------------------------
+    inputs = torch.randn(3,4)
+    print('Inputs is: ', inputs)
+    # 实例化模型
+    model = model_SR(input_dim=4, output_dim=4)
+    outputs = model(inputs) 
+    print('Outputs is: ', outputs)
+    """
+    outputs_dim=4 -> 0.25
+    outputs_dim=2 -> 0.5
+    outputs_dim=3 -> 0.3333
+    """
