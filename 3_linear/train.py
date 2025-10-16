@@ -23,4 +23,4 @@ if __name__ == "__main__":
     runner = Runner(model, optimizer, metric, loss_fn)
     runner.train([X_train, y_train], [X_dev, y_dev], num_epochs=500, log_epochs=50, save_path="best_model.pth")
 
-    plot(runner,fig_name='linear-acc-fixed_5.png')
+    plot(runner,fig_name='linear-acc-fixed_6.png')

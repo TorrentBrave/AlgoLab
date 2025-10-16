@@ -50,7 +50,10 @@ class Runner(object):
             if epoch % log_epochs == 0:
                 print(f"[Train] epoch: {epoch}, loss: {trn_loss}, score: {trn_score}")
                 print(f"[Dev] epoch: {epoch}, loss: {dev_loss}, score: {dev_score}")
-    def evaluate(self, data_set):
+    def evaluate(self, data_set, **kwargs):
+        load_path = kwargs.get("load_path", None)
+        if load_path is not None:
+            self.load_model(load_path)
         X, y = data_set
         # 计算模型输出
         logits = self.model(X)
