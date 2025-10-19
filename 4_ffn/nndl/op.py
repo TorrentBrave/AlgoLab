@@ -63,6 +63,19 @@ class Logistic(Op):
         outputs = 1.0 / (1.0 + torch.exp(-inputs))
         self.outputs = outputs
         return outputs
+    def backward(self, grad_outputs):
+        """
+        使用 Logistic 作为激活函数, 所以需要 backward, 如果
+        反向传播
+        输入：
+           - grad_outputs: 梯度, shape=[N, C]
+           - 最终输出对于outputs的梯度
+        输出：
+           - grad_inputs: 梯度, shape=[N, C]
+           - 最终输出对于inputs的梯度
+        """
+        grad_inputs = grad_outputs * self.outputs * (1 - self.outputs)
+        return grad_inputs
 
 class Model_MLP_L2(Op):
     def __init__(self, input_dim, hidden_dim, output_dim):
