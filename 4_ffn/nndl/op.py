@@ -130,7 +130,44 @@ class BinaryCrossEntropyLoss(Op):
         loss = torch.squeeze(loss, axis=1)
         return loss
     
-    
+class BinaryCrossEntropyLoss(Op):
+    def __init__(self, model):
+        self.predicts = None
+        self.labels = None
+        self.num = None
+
+        self.model = model
+    def __call__(self, predicts, labels):
+        return self.forward(predicts, labels)
+    def forward(self, predicts, labels):
+        """
+        输入:
+            - predicts: 预测值, shape=[N, 1], N为样本数量
+            - labels: 真实标签, shape=[N, 1]
+        输出:
+            - 损失值: shape=[1]
+        """
+        self.predicts = predicts
+        self.labels = labels
+        self.num = self.predicts.shape[0]
+        # 防止 log(0) 出现数值溢出
+        # eps = 1e-8 加在 log() 中
+        loss = -1. / self.num * (
+            torch.matmul(self.labels.T, torch.log(self.predicts)) +
+            torch.matmul ((1 - self.labels).T, torch.log(1 - self.predicts))
+        )
+
+        loss = torch.squeeze(loss, dim=1)
+        return loss
+    def backward(self):
+        # eps = 1e-8
+        grad = -1. / self.num * (
+            self.labels / self.predicts -
+            (1 - self.labels) / (1 - self.predicts)
+        )
+        # 梯度反向传播
+        self.model.backward(grad)
+
 if __name__ == '__main__':
     torch.manual_seed(42)
     model = Model_MLP_L2(input_dim=5, hidden_dim=10, output_dim=1)
