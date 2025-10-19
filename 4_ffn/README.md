@@ -166,6 +166,40 @@ $$
 
 > 实现损失函数的backward()
 
+### 5.3 Logistic算子
+> 使用Logistic激活函数, 为Logistic算子添加的反向函数
+>
+> Logistic算子的前向过程表示为 $\boldsymbol{A}=\sigma(\boldsymbol{Z})$ , 其中 $\sigma$ 为Logistic函数, $\boldsymbol{Z} \in R^{N \times D}$ 和 $\boldsymbol{A} \in R^{N \times D}$ 的 每一行表示一个样本
+>
+> 分别用向量 $\boldsymbol{a} \in R^D$ 和 $\boldsymbol{z} \in R^D$ 表示同一个样本在激活函数前后的表示，则 $a$ 对 $z$ 的偏导数是: $\frac{\partial \boldsymbol{a}}{\partial \boldsymbol{z}}=diag(\boldsymbol{a}\odot(1-\boldsymbol{a}))\in R^{D \times D}$
+>
+> 按照反向传播算法, 令 $\delta_{\boldsymbol{a}}=\frac{\partial R}{\partial \boldsymbol{a}} \in R^D$ 表示最终损失 $R$ 对 Logistic算子的单个输出 $a$ 的梯度
+>
+> 则 $\delta_{\boldsymbol{z}} \triangleq \frac{\partial R}{\partial \boldsymbol{z}} = \frac{\partial \boldsymbol{a}}{\partial \boldsymbol{z}}\delta_{\boldsymbol{a}} \\
+= diag(\boldsymbol{a}\odot(1-\boldsymbol{a}))\delta_{\boldsymbol(a)} \\
+= \boldsymbol{a}\odot(1-\boldsymbol{a})\odot\delta_{\boldsymbol(a)}$
+
+将上面公式利用批量数据表示的方式重写,令
+
+$\delta_{\boldsymbol{A}} =\frac{\partial R}{\partial \boldsymbol{A}} \in R^{N \times D}$
+
+表示最终损失 $R$ 对Logistic算子输出 $A$ 的梯度，损失函数对Logistic函数输入 $Z$ 的导数为 
+
+$\delta_{\boldsymbol{Z}}=\boldsymbol{A} \odot (1-\boldsymbol{A})\odot \delta_{\boldsymbol{A}} \in R^{N \times D}$
+
+$\delta_{\boldsymbol{Z}}$ 为Logistic算子反向传播的输出
+
+Logistic函数中没有参数，这里不需要在backward()方法中计算该算子参数的梯度
+
+### 5.4 线性算子(线性层)
+线性层算子Linear的前向过程表示为 $\boldsymbol{Y}=\boldsymbol{X}\boldsymbol{W}+\boldsymbol{b}$， 其中输入为 $\boldsymbol{X} \in R^{N \times M}$, 输出为 $\boldsymbol{Y} \in R^{N \times D}$， 参数为权重矩阵 $\boldsymbol{W} \in R^{M \times D}$ 偏置 $\boldsymbol{b} \in R^{1 \times D}$, $X$ 和 $Y$ 中的每一行表示一个样本
+
+
+### 5.5 优化器
+在计算好神经网络参数的梯度之后,我们将梯度下降法中参数的更新过程实现在优化器中
+
+与第3章中实现的梯度下降优化器SimpleBatchGD不同的是,此处的优化器需要遍历每层，对每层的参数分别做更新
+
 # 激活函数的选择
 
 非常好的问题 👍，你提到的这个点其实涉及 **Sigmoid / Logistic 函数的数学作用** 和 **模型训练的稳定性**，我来帮你拆开讲清楚。
@@ -739,3 +773,130 @@ y_hat = torch.tensor([1e-8])
 
 如果你愿意，我可以展示一个实际小实验：
 对比 `eps=1e-8`、`eps=1e-4`、`eps=1e-12` 对梯度数值和损失值的影响，用图或代码输出。是否要我帮你展示？
+
+
+# Sigmoid 函数的求梯度性质
+
+好的，我们来仔细解释这段关于 **Logistic 算子**（也就是 **Sigmoid 激活函数**）的内容。
+
+---
+
+## 🌱 一、前向过程
+
+Logistic 激活函数定义为：
+
+[
+\sigma(z) = \frac{1}{1 + e^{-z}}
+]
+
+在向量形式下，对于一个样本 ( \boldsymbol{z} \in \mathbb{R}^D )：
+
+[
+\boldsymbol{a} = \sigma(\boldsymbol{z}) \in \mathbb{R}^D
+]
+
+* (\boldsymbol{z})：激活前的线性组合向量（每个元素对应一个神经元的输入）
+* (\boldsymbol{a})：激活后的输出，每个元素在 ((0,1)) 区间，表示“概率”或“激活强度”
+
+> 前向过程就是对每个元素逐元素做 sigmoid 映射：
+> [
+> a_i = \sigma(z_i) = \frac{1}{1+e^{-z_i}}
+> ]
+
+---
+
+## 🌿 二、单个元素的导数
+
+Sigmoid 函数有一个很方便的性质：
+
+[
+\frac{da_i}{dz_i} = a_i (1 - a_i)
+]
+
+* 意思：输出 (a_i) 对输入 (z_i) 的变化率
+* 范围：当 (a_i) 接近 0 或 1 时，导数很小 → 梯度容易消失
+* 当 (a_i \approx 0.5) 时，导数最大 → 梯度最有效
+
+---
+
+## 🌸 三、向量/矩阵形式的梯度
+
+对于向量 (\boldsymbol{a} \in \mathbb{R}^D)：
+
+[
+\boldsymbol{a} = \sigma(\boldsymbol{z})
+]
+
+我们要求 **雅可比矩阵**（Jacobian）：
+
+[
+\frac{\partial \boldsymbol{a}}{\partial \boldsymbol{z}} \in \mathbb{R}^{D \times D}
+]
+
+* 这是一个 (D \times D) 的矩阵，每个元素：
+  [
+  \frac{\partial a_i}{\partial z_j} =
+  \begin{cases}
+  a_i (1 - a_i), & i = j \
+  0, & i \ne j
+  \end{cases}
+  ]
+
+* 为什么对角线是 (a_i(1-a_i))？因为每个输出 (a_i) 只依赖于对应的输入 (z_i)，不同元素之间没有交互 → 非对角元素为 0
+
+因此可以写成 **对角矩阵**：
+
+[
+\frac{\partial \boldsymbol{a}}{\partial \boldsymbol{z}} = \text{diag}(\boldsymbol{a} \odot (1 - \boldsymbol{a}))
+]
+
+* (\odot) 表示逐元素乘积
+* diag() 表示把向量放在对角线上，非对角线元素为 0
+
+> 直观理解：
+>
+> * 每个神经元的梯度只影响自身输出 → 雅可比是对角矩阵
+> * 梯度大小由 (a_i(1-a_i)) 控制 → 体现 Sigmoid 的饱和效应
+
+---
+
+## 🌟 四、例子
+
+假设一个样本有 3 个神经元，输出：
+[
+\boldsymbol{a} = [0.2, 0.5, 0.8]
+]
+
+则雅可比矩阵：
+
+[
+\frac{\partial \boldsymbol{a}}{\partial \boldsymbol{z}} =
+\begin{bmatrix}
+0.2 \cdot 0.8 & 0 & 0 \
+0 & 0.5 \cdot 0.5 & 0 \
+0 & 0 & 0.8 \cdot 0.2
+\end{bmatrix} =
+\begin{bmatrix}
+0.16 & 0 & 0 \
+0 & 0.25 & 0 \
+0 & 0 & 0.16
+\end{bmatrix}
+]
+
+* 每个对角线值对应 (a_i(1-a_i))
+* 非对角线为 0 → 表示神经元独立
+
+---
+
+## 🔹 总结
+
+1. **前向**：对每个神经元做 sigmoid → 输出在 (0,1)
+2. **单元素导数**：(\frac{da_i}{dz_i} = a_i(1-a_i))
+3. **向量雅可比矩阵**：对角矩阵 `diag(a ⊙ (1-a))`
+4. **意义**：用于反向传播计算梯度，每个神经元的梯度只影响自己
+
+---
+
+如果你需要，我可以画一张 **前向 sigmoid → 对角雅可比 → 反向传播梯度的图**，直观展示每个神经元的梯度是如何传下去的。
+
+你希望我画吗？

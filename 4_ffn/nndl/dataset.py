@@ -58,6 +58,22 @@ def make_moons(n_samples=1000, shuffle=True, noise=None):
     return X, y
 
 
+n_samples = 1000
+X, y = make_moons(n_samples=n_samples, shuffle=True, noise=0.5)
+
+num_train = 640
+num_dev = 160
+num_test = 200
+
+X_train, y_train = X[:num_train], y[:num_train]
+X_dev, y_dev = X[num_train:num_train + num_dev], y[num_train:num_train + num_dev]
+X_test, y_test = X[num_train + num_dev:], y[num_train + num_dev:]
+
+y_train = y_train.reshape([-1,1])
+y_dev = y_dev.reshape([-1,1])
+y_test = y_test.reshape([-1,1])
+
+
 if __name__ == "__main__":
     n_samples = 1000
     X, y = make_moons(n_samples=n_samples, shuffle=True, noise=0.5)

@@ -27,9 +27,12 @@ class Linear(Op):
         """
         super(Linear, self).__init__()
         self.params = {}
-        self.params['w'] = weight_init(input_dim, output_dim)
-        self.params['b'] = bias_init(output_dim)
+        self.params['W'] = weight_init(input_dim, output_dim)
+        self.params['b'] = bias_init(1, output_dim)
+        
         self.inputs = None
+        self.grads = {}
+
         self.name = name
     def forward(self, inputs):
         """
@@ -40,9 +43,21 @@ class Linear(Op):
            - outputs: 预测值, shape=[N, output_dim]
         """
         self.inputs = inputs
-        outputs = torch.mm(self.inputs, self.params['w']) + self.params['b']
+        outputs = torch.matmul(self.inputs, self.params['W']) + self.params['b']
         return outputs
-    
+    def backward(self, grads):
+        """
+        反向传播
+        grads: 上游梯度, shape=[N, output_size]
+        返回: 当前层输入的梯度, shape=[N, input_size]
+        """
+        # 对权重和偏置求梯度
+        self.grads['W'] = torch.matmul(self.inputs.T, grads)   # shape: [input_size, output_size]
+        self.grads['b'] = torch.sum(grads, dim=0, keepdim=True)  # shape: [1, output_size]
+
+        # 返回的是对输入 X 的梯度
+        return torch.matmul(grads, self.params['W'].T)
+
 class Logistic(Op):
     """
     把数值映射到 [0,1] 区间
@@ -50,6 +65,7 @@ class Logistic(Op):
     def __init__(self):
         self.inputs = None
         self.outputs = None
+        self.params = None # Logistic 层无参数
 
     def forward(self, inputs):
         """
@@ -63,23 +79,23 @@ class Logistic(Op):
         outputs = 1.0 / (1.0 + torch.exp(-inputs))
         self.outputs = outputs
         return outputs
-    def backward(self, grad_outputs):
+    def backward(self, grads):
         """
         使用 Logistic 作为激活函数, 所以需要 backward, 如果
         反向传播
         输入：
-           - grad_outputs: 梯度, shape=[N, C]
+           - grads: 上游梯度, shape=[N, C], shape 与 inputs 相同
            - 最终输出对于outputs的梯度
-        输出：
-           - grad_inputs: 梯度, shape=[N, C]
+        返回： 输出对输入的梯度
            - 最终输出对于inputs的梯度
         """
-        grad_inputs = grad_outputs * self.outputs * (1 - self.outputs)
+        grad_inputs = grads * self.outputs * (1.0 - self.outputs)
         return grad_inputs
 
 class Model_MLP_L2(Op):
     def __init__(self, input_dim, hidden_dim, output_dim):
         """
+        整个网络, 实现完整的两层神经网络的前向和反向计算
         输入:
             - input_dim: 输入维度
             - hidden_dim: 隐藏层神经元数量
@@ -91,6 +107,8 @@ class Model_MLP_L2(Op):
         self.act_fn1 = Logistic()
         self.fc2 = Linear(hidden_dim, output_dim, name="fc2")
         self.act_fn2 = Logistic()
+
+        self.layers = [self.fc1, self.act_fn1, self.fc2, self.act_fn2]
     def __call__(self, X):
         return self.forward(X)
     def forward(self, X):
@@ -105,30 +123,14 @@ class Model_MLP_L2(Op):
         z2 = self.fc2(a1)
         a2 = self.act_fn2(z2)
         return a2
-
-class BinaryCrossEntropyLoss(Op):
-    def __init__(self):
-        self.predicts = None
-        self.labels = None
-        self.num = None
-    
-    def __call__(self, predicts, labels):
-        return self.forward(predicts, labels)
-    
-    def forward(self, predicts, labels):
+    def backward(self, loss_grad_a2):
         """
-        输入:
-            - predicts: 预测值, shape=[N, 1], N为样本数量
-            - labels: 真实标签, shape=[N, 1]
-        输出:
-            - 损失值: shape=[1]
+        loss_grad_a2 就是 损失函数对网络最终输出 a2 的梯度
         """
-        self.predicts = predicts
-        self.labels = labels
-        self.num = self.predicts.shape[0]
-        loss = -1. / self.num * (torch.matmul(self.labels.T, torch.log(self.predicts)) + torch.matmul((1 - self.labels.T), torch.log(1 - self.predicts)))
-        loss = torch.squeeze(loss, axis=1)
-        return loss
+        loss_grad_z2 = self.act_fn2.backward(loss_grad_a2)
+        loss_grad_a1 = self.fc2.backward(loss_grad_z2)
+        loss_grad_z1 = self.act_fn1.backward(loss_grad_a1)
+        loss_grad_inputs = self.fc1.backward(loss_grad_z1)
     
 class BinaryCrossEntropyLoss(Op):
     def __init__(self, model):
